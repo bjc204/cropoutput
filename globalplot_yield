@@ -15,7 +15,7 @@ map = Basemap(projection='cyl',llcrnrlat=-90,urcrnrlat=90,\
             llcrnrlon=-180,urcrnrlon=180,resolution='c', ax=ax)
 map.drawcoastlines()
 map.drawparallels(np.arange(-90.,120.,30.),labels=[1,0,0,0])
-map.drawmeridians(np.arange(-180.,180.,60.),labels=[0,0,0,1])
+map.drawmeridians(np.arange(-180.,180.,90.),labels=[0,0,0,1])
 Yield,lons = shiftgrid(180.,Yield,lons,start=False)
 llons, llats = np.meshgrid(lons, lats)
 x,y = map(llons,llats)
