@@ -1,0 +1,69 @@
+path="/glade/p/univ/urtg0006/OVERSHOOT/originalfiles/SO4/"
+case1="b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001"
+case2="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.001"
+case3="b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.feedback.15C.001"
+case4="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.feedback.15C.001"
+case5="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.feedback.20C.001"
+
+f1=addfile(path+case1+".cam.h0zm.BURDENSO4dn.201501-210012.nc","r")
+f2=addfile(path+case2+".cam.h0zm.BURDENSO4dn.204001-210012.nc","r")
+;f3=addfile(path+case3+"_2019-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f4=addfile(path+case4+".cam.h0zm.BURDENSO4dn.204001-210012.nc","r")
+f5=addfile(path+case5+".cam.h0zm.BURDENSO4dn.203301-209912.nc","r")
+
+Ere = 6.3712e6         ; radius of earth,m
+    pi = 3.14159265
+
+NPP5=f5->BURDENSO4dn ;kg/m2
+NPP1=f1->BURDENSO4dn
+NPP2=f2->BURDENSO4dn
+;NPP3=f3->yield
+NPP4=f4->BURDENSO4dn
+lat=f1->lat
+nlat=dimsizes(lat)
+gw1=NormCosWgtGlobe(lat)
+print(gw1)
+areas=new((/nlat/),float)
+do la=0,nlat-1
+area=doubletofloat(gw1(la)*(2.*pi)*Ere^2.)  ;m2
+print(area)
+areas(la)=area
+end do
+
+area1=conform_dims(dimsizes(NPP1),areas,(/1/))
+area2=conform_dims(dimsizes(NPP2),areas,(/1/))
+;area3=conform_dims(dimsizes(NPP3),areas,(/1/))
+area4=conform_dims(dimsizes(NPP4),areas,(/1/))
+area5=conform_dims(dimsizes(NPP5),areas,(/1/))
+
+S1=NPP1*area1*1e-9 ; Tg/yr
+S2=NPP2*area2*1e-9 ; Tg/yr
+;S3=NPP3*area3*1e-9 ; Tg/yr
+S4=NPP4*area4*1e-9 ; Tg/yr
+S5=NPP5*area5*1e-9 ; Tg/yr
+
+S1g=dim_sum_n_Wrap(S1,1)
+S2g=dim_sum_n_Wrap(S2,1)
+;S3g=dim_sum_n_Wrap(S3,1)
+S4g=dim_sum_n_Wrap(S4,1)
+S5g=dim_sum_n_Wrap(S5,1)
+
+S1ga=month_to_annual(S1g,1)
+S2ga=month_to_annual(S2g,1)
+S4ga=month_to_annual(S4g,1)
+S5ga=month_to_annual(S5g,1)
+printVarSummary(S1ga)
+printVarSummary(S2ga)
+printVarSummary(S4ga)
+printVarSummary(S5ga)
+total=new((/5,86/),float)
+total(0,:)=S1ga
+total(1,25:85)=S2ga
+;total(2,4:85)=S3ga
+total(3,25:85)=S4ga
+total(4,18:84)=S5ga
+
+asciiwrite("OSSO4.txt",total)
+
+
+end
