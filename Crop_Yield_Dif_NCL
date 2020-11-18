@@ -1,0 +1,216 @@
+path="/glade/p/univ/urtg0006/OVERSHOOT/files/"
+case1="b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001"
+case2="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.001"
+case3="b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.feedback.15C.001"
+case4="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.feedback.15C.001"
+case5="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.feedback.20C.001"
+
+f1=addfile(path+case1+"_2015-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f2=addfile(path+case2+"_2040-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f3=addfile(path+case3+"_2019-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f4=addfile(path+case4+"_2040-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f5=addfile(path+case5+"_2033-2099_yield_latlon_CLM5mask_6crops.nc","r")
+;f52=addfile(path5+"/lnd/proc/tseries/month_1/"+case5+".clm2.h0.FSDS.208301-209912.nc","r")
+
+NPP5=f5->yield
+NPP1=f1->yield
+NPP2=f2->yield
+NPP3=f3->yield
+NPP4=f4->yield
+lat=f1->lat
+lon=f1->lon
+area=f1->area
+area1=conform_dims(dimsizes(NPP1),area,(/1,2,3/))
+area2=conform_dims(dimsizes(NPP2),area,(/1,2,3/))
+area3=conform_dims(dimsizes(NPP3),area,(/1,2,3/))
+area4=conform_dims(dimsizes(NPP4),area,(/1,2,3/))
+area5=conform_dims(dimsizes(NPP5),area,(/1,2,3/))
+
+P1=NPP1*area1
+P2=NPP2*area2
+P3=NPP3*area3
+P4=NPP4*area4
+P5=NPP5*area5
+
+gP1=dim_sum_n_Wrap(dim_sum_n_Wrap(P1,2),2)
+gP2=dim_sum_n_Wrap(dim_sum_n_Wrap(P2,2),2)
+gP3=dim_sum_n_Wrap(dim_sum_n_Wrap(P3,2),2)
+gP4=dim_sum_n_Wrap(dim_sum_n_Wrap(P4,2),2)
+gP5=dim_sum_n_Wrap(dim_sum_n_Wrap(P5,2),2)
+
+total=new((/6,86/),float)
+total(0,:)=gP1(:,0)*
+P31is=where(abs(P31).lt.con,999,P31@_FillValue)
+P42is=where(abs(P42).lt.con,999,P42@_FillValue)
+P52is=where(abs(P52).lt.con,999,P52@_FillValue)
+
+P31!0="crop"
+P31!1="lat"
+P31!2="lon"
+P31&lat=lat
+P31&lon=lon
+P31&lat@units="degrees_north"
+P31&lon@units="degrees_east"
+
+copy_VarMeta(P31,P42)
+copy_VarMeta(P31,P52)
+
+
+asciiwrite("Cornfile.txt",P42)
+asciiwrite("lat.txt",lat)
+asciiwrite("lon.txt",lon)
+
+wks2=gsn_open_wks("pdf","AMS-OS-land-map-corn")
+plots2=new(3,graphic)
+ gsn_define_colormap(wks2, "MPL_BrBG")
+; gsn_reverse_colormap(wks2)
+  res2                       = True             ; turn on plotting options
+  res2@lbLabelBarOn          = False
+  res2@mpProjection="Mollweide"
+  res2@mpGridAndLimbOn = True
+  res2@mpGridLatSpacingF = 20.
+  res2@mpGridLonSpacingF = 30.
+  res2@gsnSpreadColors       = True             ; spans all colors in colormap
+  res2@cnFillOn              = True             ; turn on color fill
+  res2@cnLinesOn             = False            ; turn off contour lines
+  res2@cnLineLabelsOn        = False            ; turn off contour line labels
+  res2@gsnDraw               = False
+  res2@gsnFrame              = False
+  res2@lbAutoManage          = False
+  res2@lbLabelFontHeightF    = 0.015
+res2@tmBorderThicknessF=0.5
+res2@tmXBMajorThicknessF=0.5
+res2@tmXTMajorThicknessF=0.5
+res2@tmYLMajorThicknessF=0.5
+res2@tmYRMajorThicknessF=0.5
+res2@tmXBMinorThicknessF=0.5
+res2@tmXTMinorThicknessF=0.5
+res2@tmYLMinorThicknessF=0.5
+res2@tmYRMinorThicknessF=0.5
+res2@tmXBLabelFontThicknessF=0.5
+res2@tmXTLabelFontThicknessF=0.5
+res2@tmYLLabelFontThicknessF=0.5
+res2@tmYRLabelFontThicknessF=0.5
+
+res1=True
+  res1@cnConstFEnableFill = True
+  res1@gsnDraw          = False         ; Don't draw plots
+  res1@gsnFrame         = False         ; Don't advance frame
+  res1@gsnSpreadColors  = True          ; Span full color map
+  res1@cnFillOn         = True          ; Turn on contour fill
+  res1@cnLinesOn        = False         ; Turn off contour lines
+  res1@cnConstFLabelOn = False
+  res1@lbLabelBarOn     =False
+  res1@cnMonoFillColor = True
+  res1@cnFillPattern = 8
+  res1@cnFillColor= "gray27"
+
+  res2@cnLevelSelectionMode = "ManualLevels"
+  res2@cnMinLevelValF        = -1       ; min value to plot
+  res2@cnMaxLevelValF        = 1
+  res2@cnLevelSpacingF       = 0.1      ; sets frequency of colors on colormap
+
+  res2@gsnLeftString          = "Corn"
+  res2@gsnRightString         = "Geo SSP5-85 1.5 minus SSP5-8.5"
+  res2@gsnCenterString        = ""
+  plots2(0)                   = gsn_csm_contour_map(wks2,P31(0,:,:),res2)
+  plot0=gsn_csm_contour(wks2,P31is(0,:,:),res1)
+  overlay(plots2(0),plot0)
+
+;  res2@tiMainString          = "Geo SSP5-34-OS 1.5 minus SSP5-34-OS"
+  res2@gsnRightString         = "Geo SSP5-34 1.5 minus SSP5-34-OS"
+  plots2(1)                   = gsn_csm_contour_map(wks2,P42(0,:,:),res2)
+  plot1=gsn_csm_contour(wks2,P42is(0,:,:),res1)
+  overlay(plots2(1),plot1)
+;  res2@tiMainString          = "Geo SSP5-34-OS 2.0 minus SSP5-34-OS"
+  res2@gsnRightString         = "Geo SSP5-34 2.0 minus SSP5-34-OS"
+  plots2(2)                   = gsn_csm_contour_map(wks2,P52(0,:,:),res2)
+  plot2=gsn_csm_contour(wks2,P52is(0,:,:),res1)
+  overlay(plots2(2),plot2)
+
+pres                      = True
+;  pres@txString             = "2060-2069 (gC/m2/yr)"
+  pres@txFontHeightF        = 0.010
+  pres@gsnPanelLabelBar     = True
+
+  gsn_panel(wks2,plots2,(/1,3/),pres)
+
+wks2=gsn_open_wks("pdf","AMS-OS-land-map-rice")
+plots2=new(3,graphic)
+ gsn_define_colormap(wks2, "MPL_BrBG")
+; gsn_reverse_colormap(wks2)
+  res2                       = True             ; turn on plotting options
+  res2@lbLabelBarOn          = False
+  res2@mpProjection="Mollweide"
+  res2@mpGridAndLimbOn = True
+  res2@mpGridLatSpacingF = 20.
+  res2@mpGridLonSpacingF = 30.
+  res2@gsnSpreadColors       = True             ; spans all colors in colormap
+  res2@cnFillOn              = True             ; turn on color fill
+  res2@cnLinesOn             = False            ; turn off contour lines
+  res2@cnLineLabelsOn        = False            ; turn off contour line labels
+  res2@gsnDraw               = False
+  res2@gsnFrame              = False
+  res2@lbAutoManage          = False
+  res2@lbLabelFontHeightF    = 0.015
+  res2@txFontHeightF         = 0.015
+res2@tmBorderThicknessF=0.5
+res2@tmXBMajorThicknessF=0.5
+res2@tmXTMajorThicknessF=0.5
+res2@tmYLMajorThicknessF=0.5
+res2@tmYRMajorThicknessF=0.5
+res2@tmXBMinorThicknessF=0.5
+res2@tmXTMinorThicknessF=0.5
+res2@tmYLMinorThicknessF=0.5
+res2@tmYRMinorThicknessF=0.5
+res2@tmXBLabelFontThicknessF=0.5
+res2@tmXTLabelFontThicknessF=0.5
+res2@tmYLLabelFontThicknessF=0.5
+res2@tmYRLabelFontThicknessF=0.5
+
+res1=True
+  res1@cnConstFEnableFill = True
+  res1@gsnDraw          = False         ; Don't draw plots
+  res1@gsnFrame         = False         ; Don't advance frame
+  res1@gsnSpreadColors  = True          ; Span full color map
+  res1@cnFillOn         = True          ; Turn on contour fill
+  res1@cnLinesOn        = False         ; Turn off contour lines
+  res1@cnConstFLabelOn = False
+  res1@lbLabelBarOn     =False
+  res1@cnMonoFillColor = True
+  res1@cnFillPattern = 8
+  res1@cnFillColor= "gray27"
+
+  res2@cnLevelSelectionMode = "ManualLevels"
+  res2@cnMinLevelValF        = -1       ; min value to plot
+  res2@cnMaxLevelValF        = 1
+  res2@cnLevelSpacingF       = 0.1      ; sets frequency of colors on colormap
+
+  res2@gsnLeftString          = "Rice"
+  res2@gsnRightString         = "Geo SSP5-85 1.5 minus SSP5-8.5"
+  res2@gsnCenterString        = ""
+  plots2(0)                   = gsn_csm_contour_map(wks2,P31(3,:,:),res2)
+  plot0=gsn_csm_contour(wks2,P31is(3,:,:),res1)
+  overlay(plots2(0),plot0)
+
+;  res2@tiMainString          = "Geo SSP5-34-OS 1.5 minus SSP5-34-OS"
+  res2@gsnRightString         = "Geo SSP5-34 1.5 minus SSP5-34-OS"
+  plots2(1)                   = gsn_csm_contour_map(wks2,P42(3,:,:),res2)
+  plot1=gsn_csm_contour(wks2,P42is(3,:,:),res1)
+  overlay(plots2(1),plot1)
+
+;  res2@tiMainString          = "Geo SSP5-34-OS 2.0 minus SSP5-34-OS"
+  res2@gsnRightString         = "Geo SSP5-34 2.0 minus SSP5-34-OS"
+  plots2(2)                   = gsn_csm_contour_map(wks2,P52(3,:,:),res2)
+  plot2=gsn_csm_contour(wks2,P52is(3,:,:),res1)
+  overlay(plots2(2),plot2)
+
+pres                      = True
+;  pres@txString             = "2060-2069 (gC/m2/yr)"
+  pres@txFontHeightF        = 0.010
+  pres@gsnPanelLabelBar     = True
+
+  gsn_panel(wks2,plots2,(/1,3/),pres)
+
+
+end
