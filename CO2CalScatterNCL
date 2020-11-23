@@ -1,0 +1,160 @@
+C1=asciiread("CO2SSP585.txt",(/86/),"float")
+C2=asciiread("CO2SSP534OS.txt",(/61/),"float")
+totalCO=new((/5,86/),float)
+totalCO(0,:)=C1
+totalCO(1,25:85)=C2
+totalCO(2,4:85)=C1(4:85)
+totalCO(3,25:85)=C2
+totalCO(4,18:24)=C1(18:24)
+totalCO(4,25:85)=C2
+
+
+path="/glade/p/univ/urtg0006/OVERSHOOT/files/"
+case1="b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001"
+case2="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.001"
+case3="b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.feedback.15C.001"
+case4="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.feedback.15C.001"
+case5="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.feedback.20C.001"
+
+f1=addfile(path+case1+"_2015-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f2=addfile(path+case2+"_2040-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f3=addfile(path+case3+"_2019-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f4=addfile(path+case4+"_2040-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f5=addfile(path+case5+"_2033-2099_yield_latlon_CLM5mask_6crops.nc","r")
+
+NPP5=f5->yield
+NPP1=f1->yield
+NPP2=f2->yield
+NPP3=f3->yield
+NPP4=f4->yield
+lon=f1->lon
+area=f1->areas
+area1=conform_dims(dimsizes(NPP1),area,(/1,2,3/))
+area2=conform_dims(dimsizes(NPP2),area,(/1,2,3/))
+area3=conform_dims(dimsizes(NPP3),area,(/1,2,3/))
+area4=conform_dims(dimsizes(NPP4),area,(/1,2,3/))
+area5=conform_dims(dimsizes(NPP5),area,(/1,2,3/))
+
+P1=NPP1*area1
+P2=NPP2*area2
+P3=NPP3*area3
+P4=NPP4*area4
+P5=NPP5*area5
+gP1=dim_sum_n_Wrap(dim_sum_n_Wrap(P1,2),2)
+gP2=dim_sum_n_Wrap(dim_sum_n_Wrap(P2,2),2)
+gP3=dim_sum_n_Wrap(dim_sum_n_Wrap(P3,2),2)
+gP4=dim_sum_n_Wrap(dim_sum_n_Wrap(P4,2),2)
+gP5=dim_sum_n_Wrap(dim_sum_n_Wrap(P5,2),2)
+
+total=new((/5,86/),float)
+total(0,:)=gP1(:,0)*356*10000+gP1(:,3)*280*10000+gP1(:,6)*335*10000+gP1(:,9)*334*10000
+total(1,25:85)=gP2(:,0)*356*10000+gP2(:,3)*280*10000+gP2(:,6)*335*10000+gP2(:,9)*334*10000
+total(2,4:85)=gP3(:,0)*356*10000+gP3(:,3)*280*10000+gP3(:,6)*335*10000+gP3(:,9)*334*10000
+total(3,25:85)=gP4(:,0)*356*10000+gP4(:,3)*280*10000+gP4(:,6)*335*10000+gP4(:,9)*334*10000
+total(4,18:84)=gP5(:,0)*356*10000+gP5(:,3)*280*10000+gP5(:,6)*335*10000+gP5(:,9)*334*10000
+
+;----------------------------------------------------------------------
+; Function to attach a labelbar outside of an XY plot
+;----------------------------------------------------------------------
+function attach_labelbar(wks,plot,labels,colors)
+local lbres, vph, vpw, nboxes
+begin
+  nboxes = dimsizes(labels)
+  getvalues plot                      ; Get plot size for use in
+    "vpHeightF" : vph                 ; creating labelbar.
+    "vpWidthF"  : vpw
+  end getvalues
+
+  lbres                    = True          ; labelbar only resources
+  lbres@lbAutoManage       = False          ; Necessary to control sizes
+  lbres@lbPerimOn          = False
+  lbres@vpWidthF           = 0.2 * vpw     ; labelbar width
+  lbres@vpHeightF          = vph           ; labelbar height
+  lbres@lbFillColors       = colors
+  lbres@lbMonoFillPattern  = True          ; Solid fill pattern
+  lbres@lbLabelFontHeightF = 0.02          ; font height. default is small
+  lbres@lbLabelJust        = "CenterLeft"  ; left justify labels
+  lbres@lbBoxLinesOn       = False
+  lbres@lgLabelFontThicknessF=1.5
+  lbid = gsn_create_labelbar(wks,nboxes,labels,lbres)
+;
+; Now, create some annotation resources indicating how we want to
+; attach the labelbar to the plot.
+;
+  amres                = True
+  amres@amParallelPosF = 0.65     ; Move away from plot
+  annoid = gsn_add_annotation(plot,lbid,amres)
+
+  return(annoid)
+end
+;--------------------------------------------------------------------
+;---------------------------------------------------------------------
+
+title=(/"SSP5-8.5","SSP5-3.4-OS","SSP5-8.5-geo-1.5","SSP5-3.4-OS-geo-1.5","SSP5-3.4-OS-geo-2"/)
+do c=0,4,1
+data=new((/2,86/),float)
+data(0,:)=totalCO(c,:)
+data(1,:)=total(c,:)*1e-15
+
+colors=ispan(2,256,6)
+print(colors)
+labels=new(43,string)
+printVarSummary(labels)
+printVarSummary(labels(0::6));data(a:b:c) - data can be thinned by specifiying a stride in the subscript so that every other, or every third... is selected.
+labels(0::6)=(/2015,2027,2039,2051,2063,2075,2087,2099/)
+labels(3::6)=""
+wks=gsn_open_wks("pdf","CO2-calorie-"+title(c))
+square=NhlNewMarker(wks, "y", 35, 0.0, 0.0, 1., 1., 0.);wks,marker_strings,font_num,xoffset,yoffset,aspect_ratio,size,angle
+;---Create a scatter plot
+  res                    = True
+  res@gsnDraw            = False        ; Don't draw plot or advance
+  res@gsnFrame           = False        ; frame. Will do this later.
+res@gsnPaperOrientation="landscape"
+  res@tiMainString       = "crop calories - CO~B~2~N~ ("+title(c)+")"
+res@tiYAxisString="CO~B~2~N~ (ppm)"
+res@tiXAxisString="Global Crop Calories (10~S~15~N~ kcal/yr)"
+res@tiXAxisFontThicknessF=1.5 ; ===========================new, thickness of X title
+res@tiYAxisFontThicknessF=1.5 ; ===========================new, thickness of Y title
+res@tmXBLabelFontThicknessF           = 1.5 ;===================================new. thickness of numbers on X
+res@tmYLLabelFontThicknessF           = 1.5;    ============================================new. thickness of numbers on Y
+
+res@tmYLPrecision=2
+res@trXMinF=6.
+if c.eq.2.or.c.eq.0 then
+res@trXMaxF=14.
+else
+res@trXMaxF=10.2
+end if
+res@trXMaxF=14.
+if c.eq.0.or.c.eq.2 then
+res@trYMaxF=1110.
+res@trYMinF=370.
+else
+res@trYMaxF=560.
+res@trYMinF=450.
+end if
+
+;---Set some marker resources
+  res@xyMarkLineMode     = "Markers"
+  res@xyMarkerThicknessF = 2.5
+  res@xyMarkerColors     = colors(0)
+  res@xyMarker           = square     ; this is a filled square
+
+  overlays = new(42,graphic)
+  plot = gsn_csm_xy (wks,data(1,0:1),data(0,0:1),res)
+do j=0,41
+;    print(data(1,(j+1)*2:(j+1)*2+1))
+;    print(data(0,(j+1)*2:(j+1)*2+1))
+res@xyMarkerColors     = colors(j)
+    overlays(j) = gsn_csm_xy (wks,data(1,(j+1)*2:(j+1)*2+1),data(0,(j+1)*2:(j+1)*2+1),res)
+    overlay(plot,overlays(j))
+  end do
+
+;---Attach a labelbar
+  labelbar = attach_labelbar(wks,plot,labels,colors)
+
+;---This call resizes the plot and draws it
+  maximize_output(wks,False)
+
+end do
+end
