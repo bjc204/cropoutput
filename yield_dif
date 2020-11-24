@@ -19,5 +19,11 @@ rice_geo = rice2.mean(dim='time', skipna=True, keep_attrs=True)
 rice = rice_85 - rice_geo
 ax = plt.axes(projection=ccrs.PlateCarree())
 ax.set_global()
-rice.plot.contourf(ax=ax, levels = np.arange(-7, 8, 1), transform=ccrs.PlateCarree(), cbar_kwargs={'orientation': 'horizontal'})
+rice.plot.contourf(ax=ax, levels = np.arange(-7, 8, 0.25), transform=ccrs.PlateCarree(), cbar_kwargs={'orientation': 'horizontal'})
+ax.coastlines()
+
+#look at just eastern Asian
+ax = plt.axes(projection=ccrs.Orthographic(90, 20))
+ax.set_global()
+air.plot.contourf(ax=ax, levels = np.arange(-7, 8, 0.25), transform=ccrs.PlateCarree())
 ax.coastlines()
