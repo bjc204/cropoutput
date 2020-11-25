@@ -13,6 +13,8 @@ filepath1 = filedir + filename1
 filepath2 = filedir + filename2
 ssp585 = xr.open_dataset(filepath1)
 geo585 = xr.open_dataset(filepath2)
+ssp585['time'] = pd.date_range(start='2015', end='2101', freq='1A')
+geo585['time'] = pd.date_range(start='2019', end='2101', freq='1A')
 yield85 = ssp585['yield']
 yieldgeo= geo585['yield']
 corn85   = yield85.sel(crops=0)
