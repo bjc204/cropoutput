@@ -29,8 +29,6 @@ ax.set_global()
 corn.plot.contourf(ax=ax, levels = np.arange(-9, 9, 0.25), transform=ccrs.PlateCarree(), norm=norm, cbar_kwargs={'orientation': 'horizontal'})
 ax.coastlines()
 
-#look at specific location
-ax = plt.axes(projection=ccrs.Orthographic(90, 20))
-ax.set_global()
-rice.plot.contourf(ax=ax, levels = np.arange(-9, 9, 0.25), transform=ccrs.PlateCarree())
-ax.coastlines()
+#set extent of projection
+ax.set_extent([-150, -50, 20, 50])
+#lat to lat lon to lon (this is U.S.)
