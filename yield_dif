@@ -20,6 +20,7 @@ corngeo   = yieldgeo.sel(crops=0)
 #Last decade
 corn_85 = corn85.sel(time=slice('2090', '2100')).mean(dim='time', skipna=True, keep_attrs=True)
 corn_geo = corngeo.sel(time=slice('2090', '2100')).mean(dim='time', skipna=True, keep_attrs=True)
+corn = corn_geo - corn_85
 norm = colors.TwoSlopeNorm(vmin=-9, vcenter=0, vmax=9)
 ax = plt.axes(projection=ccrs.PlateCarree())
 ax.set_global()
