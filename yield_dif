@@ -1,29 +1,33 @@
+
 import xarray as xr
 import matplotlib.pyplot as plt
 %matplotlib
 import cartopy.crs as ccrs
 import numpy as np
+import matplotlib.colors as colors
+import pandas as pd
 filedir = '/glade/p/univ/urtg0006/OVERSHOOT/Brendan/files/crop/'
 filename1 = 'b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2015-2100_yield_latlon_CLM5mask_6crops.nc'
 filename2 = 'b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.feedback.15C.001_2019-2100_yield_latlon_CLM5mask_6crops.nc'
 filepath1 = filedir + filename1
 filepath2 = filedir + filename2
-ds1     = xr.open_dataset(filepath1)
-ds2     = xr.open_dataset(filepath2)
-yield1 = ds1['yield']
-yield2 = ds2['yield']
-rice1   = yield1.sel(crops=3)
-rice2   = yield2.sel(crops=3)
-rice_85 = rice1.mean(dim='time', skipna=True, keep_attrs=True)
-rice_geo = rice2.mean(dim='time', skipna=True, keep_attrs=True)
-rice = rice_85 - rice_geo
+ssp585 = xr.open_dataset(filepath1)
+geo585 = xr.open_dataset(filepath2)
+yield85 = ssp585['yield']
+yieldgeo= geo585['yield']
+corn85   = yield85.sel(crops=0)
+corngeo   = yieldgeo.sel(crops=0)
+#Last decade
+corn_85 = corn85.sel(time=slice('2090', '2100')).mean(dim='time', skipna=True, keep_attrs=True)
+corn_geo = corngeo.sel(time=slice('2090', '2100')).mean(dim='time', skipna=True, keep_attrs=True)
+norm = colors.TwoSlopeNorm(vmin=-9, vcenter=0, vmax=9)
 ax = plt.axes(projection=ccrs.PlateCarree())
 ax.set_global()
-rice.plot.contourf(ax=ax, levels = np.arange(-7, 8, 0.25), transform=ccrs.PlateCarree(), cbar_kwargs={'orientation': 'horizontal'})
+corn.plot.contourf(ax=ax, levels = np.arange(-9, 9, 0.25), transform=ccrs.PlateCarree(), norm=norm, cbar_kwargs={'orientation': 'horizontal'})
 ax.coastlines()
 
-#look at just eastern Asian
+#look at specific location
 ax = plt.axes(projection=ccrs.Orthographic(90, 20))
 ax.set_global()
-rice.plot.contourf(ax=ax, levels = np.arange(-7, 8, 0.25), transform=ccrs.PlateCarree())
+rice.plot.contourf(ax=ax, levels = np.arange(-9, 9, 0.25), transform=ccrs.PlateCarree())
 ax.coastlines()
