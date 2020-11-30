@@ -1,0 +1,121 @@
+begin
+
+path="/glade/p/univ/urtg0006/OVERSHOOT/files/"
+case1="b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001"
+case2="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.001"
+case3="b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.feedback.15C.001"
+case4="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.feedback.15C.001"
+case5="b.e21.BWSSP534oscmip6.f09_g17.CMIP6-SSP5-3.4OS-WACCM.feedback.20C.001"
+
+f1=addfile(path+case1+"_2015-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f2=addfile(path+case2+"_2040-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f3=addfile(path+case3+"_2019-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f4=addfile(path+case4+"_2040-2100_yield_latlon_CLM5mask_6crops.nc","r")
+f5=addfile(path+case5+"_2033-2099_yield_latlon_CLM5mask_6crops.nc","r")
+;f52=addfile(path5+"/lnd/proc/tseries/month_1/"+case5+".clm2.h0.FSDS.208301-209912.nc","r")
+
+NPP5=f5->yield
+NPP1=f1->yield
+NPP2=f2->yield
+NPP3=f3->yield
+NPP4=f4->yield
+lat=f1->lat
+lon=f1->lon
+area=f1->areas
+area1=conform_dims(dimsizes(NPP1),area,(/1,2,3/))
+area2=conform_dims(dimsizes(NPP2),area,(/1,2,3/))
+area3=conform_dims(dimsizes(NPP3),area,(/1,2,3/))
+area4=conform_dims(dimsizes(NPP4),area,(/1,2,3/))
+area5=conform_dims(dimsizes(NPP5),area,(/1,2,3/))
+
+P1=NPP1*area1
+P2=NPP2*area2
+P3=NPP3*area3
+P4=NPP4*area4
+P5=NPP5*area5
+
+gP1=dim_sum_n_Wrap(dim_sum_n_Wrap(P1,2),2)
+gP2=dim_sum_n_Wrap(dim_sum_n_Wrap(P2,2),2)
+gP3=dim_sum_n_Wrap(dim_sum_n_Wrap(P3,2),2)
+gP4=dim_sum_n_Wrap(dim_sum_n_Wrap(P4,2),2)
+gP5=dim_sum_n_Wrap(dim_sum_n_Wrap(P5,2),2)
+
+total=new((/5,86/),float)
+total(0,:)=gP1(:,0)*356*10000+gP1(:,3)*280*10000+gP1(:,6)*335*10000+gP1(:,9)*334*10000
+total(1,25:85)=gP2(:,0)*356*10000+gP2(:,3)*280*10000+gP2(:,6)*335*10000+gP2(:,9)*334*10000
+total(2,4:85)=gP3(:,0)*356*10000+gP3(:,3)*280*10000+gP3(:,6)*335*10000+gP3(:,9)*334*10000
+total(3,25:85)=gP4(:,0)*356*10000+gP4(:,3)*280*10000+gP4(:,6)*335*10000+gP4(:,9)*334*10000
+total(4,18:84)=gP5(:,0)*356*10000+gP5(:,3)*280*10000+gP5(:,6)*335*10000+gP5(:,9)*334*10000
+
+try=new((/2,3/),float)
+try(0,:)=(/0,0,0/)
+try(1,:)=(/1,1,1/)
+asciiwrite("OScalorie.txt",total)
+asciiwrite("try.txt",try)
+
+wks=gsn_open_wks("pdf","calorie")
+plot=new(1,graphic)
+res=True
+res@gsnDraw=False
+res@gsnFrame=False
+res@tmYMajorGrid=True
+res@tmYMajorGridLineColor="gray"
+res@tmYMajorGridThicknessF=0.8
+res@tmXMajorGrid=True
+res@tmXMajorGridLineColor="gray"
+res@tmXMajorGridThicknessF=0.8
+res@tmXMajorGridLineDashPattern=0
+res@tmYMajorGridLineDashPattern=0
+res@vpWidthF      = 0.5
+res@vpHeightF     = 0.5
+res@tmBorderThicknessF=1.5
+res@tmXBMajorThicknessF=1.5
+res@tmXTMajorThicknessF=1.5
+res@tmYLMajorThicknessF=1.5
+res@tmYRMajorThicknessF=1.5
+res@trXMaxF=85
+res@trXMinF=0
+res@tmYLPrecision=2
+res@tmXBLabelFontThicknessF           = 1.5 ;===================================new. thickness of numbers on X
+res@tmYLLabelFontThicknessF           = 1.5;    ============================================new. thickness of numbers on Y
+
+res@tiYAxisString="Crop Calories (10~S~15~N~ kcal/yr)"
+res@xyLineColors=(/"black","red4","purple","orange","green"/)
+res@xyDashPatterns=(/0,0,0,0,0/)
+res@xyLineThicknesses=(/3,3,3,3,3/)
+x=fspan(0,85,86)
+res@tmXBMode="Explicit"
+res@tmXBValues=(/5,25,45,65,85/)
+res@tiXAxisString="Years"
+res@tmXBLabels=(/"2020","2040","2060","2080","2100"/)
+
+res@tiXAxisFontThicknessF=1.5 ; ===========================new, thickness of X title
+res@tiYAxisFontThicknessF=1.5 ; ===========================new, thickness of Y title
+
+;plot(0)=gsn_csm_xy(wks,x,total*1e-15,res)
+res@pmLegendDisplayMode    = "Always"         ; Turn on a legend
+res@pmLegendSide           = "Bottom"               ; Change location of
+  res@pmLegendOrthogonalPosF = -1.18   ; Move unit down.  smaller up
+  res@pmLegendParallelPosF   = 0.33      ; Move to right. smaller left
+  res@pmLegendWidthF         = 0.15       ; Decrease width
+  res@pmLegendHeightF        = 0.15       ; Decrease height
+  res@lgBoxMinorExtentF      = 0.3       ; Shorten the legend lines
+  res@lgLabelFontHeightF     = 0.016     ; Change the font size
+  res@lgLabelFontThicknessF=1.5 ;========================================================new
+  res@lgPerimFill            = "SolidFill"
+  res@lgPerimFillColor       = "white"
+  res@lgRightMarginF=0.01
+  res@lgLeftMarginF=0.01
+  res@lgBottomMarginF=0.01
+  res@lgTopMarginF=0.01
+  res@lgTitleExtentF=0.01
+  res@lgPerimColor="White"
+  res@xyExplicitLegendLabels       = (/"SSP5-85","SSP5-34-OS","Geo SSP5-85 1.5","Geo SSP5-34-OS 1.5","Geo SSP5-34-OS 2.0"/)  ; explicit labels
+  res@lgItemOrder=(/4,3,2,1,0/)
+plot(0)=gsn_csm_xy(wks,x,total*1e-15,res)
+resP=True
+resP@txString="~Z60~Annual crop calorie"
+gsn_panel(wks,plot,(/1,1/),resP)
+
+
+end
